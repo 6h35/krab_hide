@@ -3,8 +3,9 @@ package main
 import (
 	"html/template"
 	"path/filepath"
-	"snippetbox.alexedwards.net/internal/models"
 	"time"
+
+	"snippetbox.alexedwards.net/internal/models"
 )
 
 // Include a Snippets field in the templateData struct.
@@ -12,6 +13,8 @@ type templateData struct {
 	CurrentYear int
 	Snippet     *models.Snippet
 	Snippets    []*models.Snippet
+	Form        any
+	Flash       string
 }
 
 // func newTemplateCache() (map[string]*template.Template, error) {
@@ -80,7 +83,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, page := range pages {
 		name := filepath.Base(page)
 		ts, err :=

@@ -3,134 +3,24 @@ package main
 import (
 	"errors"
 	"fmt"
-
-	// "html/template"
 	"net/http"
 	"strconv"
 
 	"snippetbox.alexedwards.net/internal/models"
 
 	"github.com/julienschmidt/httprouter"
+	"snippetbox.alexedwards.net/internal/validator"
 )
 
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w) // Use the notFound() helper
-// 		return
-// 	}
-// 	files := []string{
-// 		"./ui/html/base.tmpl",
-// 		"./ui/html/partials/nav.tmpl",
-// 		"./ui/html/pages/home.tmpl",
-// 	}
-// 	ts, err := template.ParseFiles(files...)
-// 	if err != nil {
-// 		app.serverError(w, err) // Use the serverError() helper.
-// 		return
-// 	}
-// 	err = ts.ExecuteTemplate(w, "base", nil)
-// 	if err != nil {
-// 		app.serverError(w, err) // Use the serverError() helper.
-// 	}
-
-// }
-
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippets, err := app.snippets.Latest()
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	for _, snippet := range snippets {
-// 		fmt.Fprintf(w, "%+v\n", snippet)
-// 	}
-
-// }
-
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippets, err := app.snippets.Latest()
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	files := []string{
-// 		"./ui/html/base.tmpl",
-// 		"./ui/html/partials/nav.tmpl",
-// 		"./ui/html/pages/home.tmpl",
-// 	}
-// 	ts, err := template.ParseFiles(files...)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	// Create an instance of a templateData struct holding the slice of
-// 	// snippets.
-
-// 	data := &templateData{
-// 		Snippets: snippets,
-// 	}
-// 	// Pass in the templateData struct when executing the template.
-// 	err = ts.ExecuteTemplate(w, "base", data)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 	}
-// }
-
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippets, err := app.snippets.Latest()
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	app.render(w, http.StatusOK, "home.tmpl", &templateData{
-// 		Snippets: snippets,
-// 	})
-// }
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippets, err := app.snippets.Latest()
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	data := app.newTemplateData(r)
-// 	data.Snippets = snippets
-// 	app.render(w, http.StatusOK, "home.tmpl", data)
-// }
-
-// func (app *application) home(w http.ResponseWriter, r *http.Request) {
-// 	if r.URL.Path != "/" {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippets, err := app.snippets.Latest()
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	data := app.newTemplateData(r)
-// 	data.Snippets = snippets
-// 	app.render(w, http.StatusOK, "home.tmpl", data)
-// }
+type snippetCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	FieldErrors map[string]string
+	validator.Validator
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	// Because httprouter matches the "/" path exactly, we can now remove the
-	// manual check of r.URL.Path != "/" from this handler.
 	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, err)
@@ -142,123 +32,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 // func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
-// }
-
-// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippet, err := app.snippets.Get(id)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			app.notFound(w)
-// 		} else {
-// 			app.serverError(w, err)
-// 		}
-// 		return
-// 	}
-// 	fmt.Fprintf(w, "%+v", snippet)
-// }
-
-// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippet, err := app.snippets.Get(id)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			app.notFound(w)
-// 		} else {
-// 			app.serverError(w, err)
-// 		}
-// 		return
-// 	}
-// 	files := []string{
-// 		"./ui/html/base.tmpl",
-// 		"./ui/html/partials/nav.tmpl",
-// 		"./ui/html/pages/view.tmpl",
-// 	}
-// 	ts, err := template.ParseFiles(files...)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	err = ts.ExecuteTemplate(w, "base", snippet)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 	}
-// }
-
-// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippet, err := app.snippets.Get(id)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			app.notFound(w)
-// 		} else {
-// 			app.serverError(w, err)
-// 		}
-// 		return
-// 	}
-// 	files := []string{
-// 		"./ui/html/base.tmpl",
-// 		"./ui/html/partials/nav.tmpl",
-// 		"./ui/html/pages/view.tmpl",
-// 	}
-// 	ts, err := template.ParseFiles(files...)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-
-// 	data := &templateData{
-// 		Snippet: snippet,
-// 	}
-
-// 	err = ts.ExecuteTemplate(w, "base", data)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 	}
-// }
-
-// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	snippet, err := app.snippets.Get(id)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			app.notFound(w)
-// 		} else {
-// 			app.serverError(w, err)
-// 		}
-// 		return
-// 	}
-// 	// Use the new render helper.
-// 	app.render(w, http.StatusOK, "view.tmpl", &templateData{
-// 		Snippet: snippet,
-// 	})
-// }
-
-// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+// 	params := httprouter.ParamsFromContext(r.Context())
+// 	id, err := strconv.Atoi(params.ByName("id"))
 // 	if err != nil || id < 1 {
 // 		app.notFound(w)
 // 		return
@@ -277,20 +52,43 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 // 	app.render(w, http.StatusOK, "view.tmpl", data)
 // }
 
+// func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
+// 	params := httprouter.ParamsFromContext(r.Context())
+// 	id, err := strconv.Atoi(params.ByName("id"))
+// 	if err != nil || id < 1 {
+// 		app.notFound(w)
+
+// 		return
+// 	}
+// 	snippet, err := app.snippets.Get(id)
+// 	if err != nil {
+// 		if errors.Is(err, models.ErrNoRecord) {
+// 			app.notFound(w)
+// 		} else {
+// 			app.serverError(w, err)
+// 		}
+// 		return
+// 	}
+// 	// Use the PopString() method to retrieve the value for the "flash" key.
+// 	// PopString() also deletes the key and value from the session data, so it
+// 	// acts like a one-time fetch. If there is no matching key in the session
+// 	// data this will return the empty string.
+// 	flash := app.sessionManager.PopString(r.Context(), "flash")
+// 	data := app.newTemplateData(r)
+// 	data.Snippet = snippet
+// 	// Pass the flash message to the template.
+// 	data.Flash = flash
+// 	app.render(w, http.StatusOK, "view.tmpl", data)
+// }
+
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	// When httprouter is parsing a request, the values of any named parameters
-	// will be stored in the request context. We'll talk about request context
-	// in detail later in the book, but for now it's enough to know that you can
-	// use the ParamsFromContext() function to retrieve a slice containing these
-	// parameter names and values like so:
 	params := httprouter.ParamsFromContext(r.Context())
-	// We can then use the ByName() method to get the value of the "id" named
-	// parameter from the slice and validate it as normal.
 	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
 	}
+
 	snippet, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
@@ -301,63 +99,196 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := app.newTemplateData(r)
-
 	data.Snippet = snippet
 	app.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 // func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		w.Header().Set("Allow", http.MethodPost)
-// 		app.clientError(w, http.StatusMethodNotAllowed) // Use the clientError() helper.
-// 		return
-// 	}
-// 	w.Write([]byte("Create a new snippet..."))
-// }
-
-// func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		w.Header().Set("Allow", http.MethodPost)
-// 		app.clientError(w, http.StatusMethodNotAllowed)
-// 		return
-// 	}
-// 	// Create some variables holding dummy data. We'll remove these later on
-// 	// during the build.
-// 	title := "O snail"
-// 	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-// 	expires := 7
-// 	// Pass the data to the SnippetModel.Insert() method, receiving the
-// 	// ID of the new record back.
-// 	id, err := app.snippets.Insert(title, content, expires)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	// Redirect the user to the relevant page for the snippet.
-// 	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id),
-// 		http.StatusSeeOther)
-// }
-
-// func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-// 	w.Write([]byte("Display the form for creating a new snippet..."))
+// 	data := app.newTemplateData(r)
+// 	app.render(w, http.StatusOK, "create.tmpl", data)
 // }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
 	app.render(w, http.StatusOK, "create.tmpl", data)
 }
 
+//	func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+//		err := r.ParseForm()
+//		if err != nil {
+//			app.clientError(w, http.StatusBadRequest)
+//			return
+//		}
+//		expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+//		if err != nil {
+//			app.clientError(w, http.StatusBadRequest)
+//			return
+//		}
+//		form := snippetCreateForm{
+//			Title:       r.PostForm.Get("title"),
+//			Content:     r.PostForm.Get("content"),
+//			Expires:     expires,
+//			FieldErrors: map[string]string{},
+//		}
+//		if strings.TrimSpace(form.Title) == "" {
+//			form.FieldErrors["title"] = "This field cannot be blank"
+//		} else if utf8.RuneCountInString(form.Title) > 100 {
+//			form.FieldErrors["title"] = "This field cannot be more than 100 characters long"
+//		}
+//		if strings.TrimSpace(form.Content) == "" {
+//			form.FieldErrors["content"] = "This field cannot be blank"
+//		}
+//		if form.Expires != 1 && form.Expires != 7 && form.Expires != 365 {
+//			form.FieldErrors["expires"] = "This field must equal 1, 7 or 365"
+//		}
+//		if len(form.FieldErrors) > 0 {
+//			data := app.newTemplateData(r)
+//			data.Form = form
+//			app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+//			return
+//		}
+//		id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+//		if err != nil {
+//			app.serverError(w, err)
+//			return
+//		}
+//		http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+//	}
+
+// func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		app.clientError(w, http.StatusBadRequest)
+// 		return
+// 	}
+// 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+// 	if err != nil {
+// 		app.clientError(w, http.StatusBadRequest)
+// 		return
+// 	}
+// 	form := snippetCreateForm{
+// 		Title:   r.PostForm.Get("title"),
+// 		Content: r.PostForm.Get("content"),
+// 		Expires: expires,
+// 	}
+// 	// Perform validation checks using the embedded Validator type.
+// 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+// 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+// 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+// 	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+// 	// If validation fails, re-render the form with error messages.
+// 	if !form.Valid() {
+// 		data := app.newTemplateData(r)
+// 		data.Form = form
+// 		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+// 		return
+// 	}
+
+// 	// Insert the snippet into the database.
+// 	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+// 	if err != nil {
+// 		app.serverError(w, err)
+// 		return
+// 	}
+
+//		// Redirect to the snippet view page.
+//		http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+//	}
+
+// func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+// 	err := r.ParseForm()
+// 	if err != nil {
+// 		app.clientError(w, http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Declare a new empty instance of the snippetCreateForm struct.
+// 	var form snippetCreateForm
+
+// 	// Call the Decode() method of the form decoder, passing in the current
+// 	// request and *a pointer* to our snippetCreateForm struct. This will
+// 	// essentially fill our struct with the relevant values from the HTML form.
+// 	// If there is a problem, we return a 400 Bad Request response to the client.
+// 	err = app.formDecoder.Decode(&form, r.PostForm)
+// 	if err != nil {
+// 		app.clientError(w, http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Then validate and use the data as normal...
+// 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+// 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+// 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+// 	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+// 	if !form.Valid() {
+// 		data := app.newTemplateData(r)
+// 		data.Form = form
+// 		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+// 		return
+// 	}
+
+// 	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+// 	if err != nil {
+// 		app.serverError(w, err)
+// 		return
+// 	}
+
+// 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+// }
+
+// func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
+// 	var form snippetCreateForm
+// 	err := app.decodePostForm(r, &form)
+// 	if err != nil {
+// 		app.clientError(w, http.StatusBadRequest)
+// 		return
+// 	}
+// 	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+// 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+// 	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+// 	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+// 	if !form.Valid() {
+// 		data := app.newTemplateData(r)
+// 		data.Form = form
+// 		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+// 		return
+// 	}
+// 	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+// 	if err != nil {
+// 		app.serverError(w, err)
+// 		return
+// 	}
+// 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+// }
+
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// Checking if the request method is a POST is now superfluous and can be
-	// removed, because this is done automatically by httprouter.
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
-	id, err := app.snippets.Insert(title, content, expires)
+	var form snippetCreateForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.tmpl", data)
+		return
+	}
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	// Update the redirect path to use the new clean URL format.
+	// Use the Put() method to add a string value ("Snippet successfully created!") and the corresponding key ("flash") to the session data.
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }

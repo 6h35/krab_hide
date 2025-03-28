@@ -62,11 +62,17 @@ func main() {
 	// }
 
 	// Chèn dữ liệu mẫu
-	err = insertSampleData(db)
-	if err != nil {
-		log.Fatal("Lỗi khi chèn dữ liệu mẫu: ", err)
+	// err = insertSampleData(db)
+	// if err != nil {
+	// 	log.Fatal("Lỗi khi chèn dữ liệu mẫu: ", err)
+	// }
+	// fmt.Println("Dữ liệu mẫu đã được chèn thành công!")
+
+	// Gọi hàm tạo bảng
+	if err := createSessionsTable(db); err != nil {
+		log.Fatal(err)
 	}
-	fmt.Println("Dữ liệu mẫu đã được chèn thành công!")
+
 }
 
 func openDB(dsn string, dbSSLCA string) (*sql.DB, error) {
@@ -126,27 +132,59 @@ func openDB(dsn string, dbSSLCA string) (*sql.DB, error) {
 // 	return err
 // }
 
-func insertSampleData(db *sql.DB) error {
-	// Kiểm tra xem bảng đã có dữ liệu chưa
-	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM snippets").Scan(&count)
+// func insertSampleData(db *sql.DB) error {
+// 	// Kiểm tra xem bảng đã có dữ liệu chưa
+// 	var count int
+// 	err := db.QueryRow("SELECT COUNT(*) FROM snippets").Scan(&count)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if count > 0 {
+// 		fmt.Println("Bảng snippets đã có dữ liệu, bỏ qua chèn dữ liệu mẫu.")
+// 		return nil
+// 	}
+
+// 	// Dữ liệu mẫu
+// 	insertSQL := `
+//     INSERT INTO snippets (title, content, expires) VALUES
+//         ('Morning Thoughts', 'A beautiful sunrise inspires new ideas every day.', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY)),
+//         ('Project Notes', 'Meeting notes for the upcoming sprint planning session.', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 14 DAY)),
+//         ('Poetry Draft', 'Roses are red, violets are blue, coding is fun, and so are you!', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 30 DAY)),
+//         ('Todo List', '1. Finish coding\n2. Test application\n3. Deploy to server', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 3 DAY)),
+//         ('Random Idea', 'What if we could automate this process with AI?', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 60 DAY));
+//     `
+// 	_, err = db.Exec(insertSQL)
+// 	return err
+// }
+
+// Câu lệnh tạo bảng sessions
+func createSessionsTable(db *sql.DB) error {
+	// Tạo bảng sessions
+	createTableQuery := `CREATE TABLE IF NOT EXISTS sessions (
+		token CHAR(43) PRIMARY KEY,
+		data BLOB NOT NULL,
+		expiry TIMESTAMP(6) NOT NULL
+	);`
+	_, err := db.Exec(createTableQuery)
 	if err != nil {
-		return err
-	}
-	if count > 0 {
-		fmt.Println("Bảng snippets đã có dữ liệu, bỏ qua chèn dữ liệu mẫu.")
-		return nil
+		return fmt.Errorf(" Lỗi khi tạo bảng sessions: %v", err)
 	}
 
-	// Dữ liệu mẫu
-	insertSQL := `
-    INSERT INTO snippets (title, content, expires) VALUES
-        ('Morning Thoughts', 'A beautiful sunrise inspires new ideas every day.', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY)),
-        ('Project Notes', 'Meeting notes for the upcoming sprint planning session.', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 14 DAY)),
-        ('Poetry Draft', 'Roses are red, violets are blue, coding is fun, and so are you!', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 30 DAY)),
-        ('Todo List', '1. Finish coding\n2. Test application\n3. Deploy to server', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 3 DAY)),
-        ('Random Idea', 'What if we could automate this process with AI?', DATE_ADD(UTC_TIMESTAMP(), INTERVAL 60 DAY));
-    `
-	_, err = db.Exec(insertSQL)
-	return err
+	// Kiểm tra xem index đã tồn tại chưa
+	var indexName string
+	err = db.QueryRow("SHOW INDEX FROM sessions WHERE Key_name = 'sessions_expiry_idx'").Scan(&indexName)
+	if err != nil {
+		// Nếu index chưa tồn tại, tạo mới
+		if err == sql.ErrNoRows {
+			_, err = db.Exec("CREATE INDEX sessions_expiry_idx ON sessions (expiry);")
+			if err != nil {
+				return fmt.Errorf(" Lỗi khi tạo index sessions_expiry_idx: %v", err)
+			}
+		} else {
+			return fmt.Errorf(" Lỗi khi kiểm tra index: %v", err)
+		}
+	}
+
+	fmt.Println("Bảng 'sessions' đã được tạo")
+	return nil
 }

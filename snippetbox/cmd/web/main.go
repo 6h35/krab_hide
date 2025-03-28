@@ -5,24 +5,31 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"flag"
-	"html/template"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/go-playground/form/v4"
 	"github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"snippetbox.alexedwards.net/internal/models"
+
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	db       *sql.DB
-	snippets *models.SnippetModel
-	templateCache map[string]*template.Template
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	db             *sql.DB
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -74,17 +81,26 @@ func main() {
 	// infoLog.Println("Bảng snippets đã được tạo thành công hoặc đã tồn tại!")
 
 	// Initialize a new template cache...
-templateCache, err := newTemplateCache()
-if err != nil {
-errorLog.Fatal(err)
-}
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	// Initialize a decoder instance...
+	formDecoder := form.NewDecoder()
+
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
 
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		db:       db,
-		snippets: &models.SnippetModel{DB: db},
-		templateCache: templateCache,
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		db:             db,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
